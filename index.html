@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#167d5a"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Splitwise"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="icon-192.png">
+<title>Splitwise — Shared Expenses</title>
+<style>
+:root{--ink:#17231f;--muted:#718078;--green:#167d5a;--green2:#e6f5ee;--bg:#f5f7f5;--line:#e4eae6;--white:#fff;--red:#b54747;--amber:#fff5dc;--shadow:0 12px 35px rgba(25,55,40,.07)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:10px 14px;font-weight:650;transition:.15s}button:hover{transform:translateY(-1px)}.primary{background:var(--green);color:white}.secondary{background:white;border:1px solid var(--line);color:var(--ink)}.danger{color:var(--red);background:#fff0f0}.small{font-size:12px;padding:7px 10px}.app{max-width:1180px;margin:auto;padding:24px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px}.brand{display:flex;align-items:center;gap:10px;font-weight:850;font-size:21px;letter-spacing:-.6px}.logo{width:36px;height:36px;background:var(--green);color:#fff;border-radius:12px;display:grid;place-items:center;font-size:20px}.top-actions{display:flex;gap:9px}.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px}.sidebar,.panel,.hero,.stat{background:var(--white);border:1px solid var(--line);border-radius:18px}.sidebar{padding:16px;height:fit-content}.side-head{display:flex;align-items:center;justify-content:space-between;padding:4px 3px 12px}.side-head h3{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:0}.split-list{display:grid;gap:6px}.split-item{padding:12px;border-radius:12px;display:flex;gap:10px;align-items:center;cursor:pointer;border:1px solid transparent}.split-item.active{background:var(--green2);border-color:#cce8d9}.split-icon{width:36px;height:36px;border-radius:11px;background:#f0f3f1;display:grid;place-items:center;font-size:18px}.split-item.active .split-icon{background:#d0ebdc}.split-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.split-meta{font-size:12px;color:var(--muted);margin-top:2px}.main{min-width:0}.welcome{margin:2px 0 22px}.eyebrow{color:var(--green);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.3px}.welcome h1{font-size:clamp(27px,4vw,36px);line-height:1.1;letter-spacing:-1.2px;margin:8px 0}.welcome p{color:var(--muted);margin:0}.hero{padding:24px;margin-bottom:16px;background:linear-gradient(120deg,#fff 0%,#f0faf4 100%)}.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.title-line{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.title-line h2{margin:0;font-size:25px;letter-spacing:-.7px}.subtitle{color:var(--muted);font-size:13px;margin-top:6px}.hero-buttons{display:flex;gap:8px;flex-wrap:wrap}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:23px}.stat{padding:15px;background:rgba(255,255,255,.8);border-radius:13px}.stat-label{font-size:12px;color:var(--muted);margin-bottom:6px}.stat-value{font-size:23px;font-weight:800;letter-spacing:-.6px}.stat-note{font-size:12px;color:var(--muted);margin-top:3px}.columns{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}.panel{padding:20px;min-width:0}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:15px}.panel h3{font-size:16px;margin:0}.panel-sub{font-size:12px;color:var(--muted);margin-top:4px}.expense-list{display:grid;gap:10px}.expense{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:13px}.expense-icon{width:42px;height:42px;flex-shrink:0;border-radius:12px;background:#f2f6f3;display:grid;place-items:center;font-size:20px}.expense-body{min-width:0;flex:1}.expense-title{font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.expense-detail{font-size:12px;color:var(--muted);margin-top:3px}.expense-amount{font-weight:800;white-space:nowrap}.balance-list{display:grid;gap:10px}.balance-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);padding:12px;border-radius:12px}.avatar{width:35px;height:35px;border-radius:50%;background:#e4f2ea;color:#176847;display:grid;place-items:center;font-size:12px;font-weight:800;flex-shrink:0}.balance-person{flex:1;min-width:0}.balance-person strong{display:block;font-size:13px}.balance-person span{display:block;color:var(--muted);font-size:12px}.amount-positive{color:var(--green);font-weight:800;white-space:nowrap}.amount-negative{color:var(--red);font-weight:800;white-space:nowrap}.settle-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.settled-tag{font-size:11px;font-weight:800;color:var(--green);background:var(--green2);padding:5px 8px;border-radius:99px}.empty{padding:30px 15px;text-align:center;color:var(--muted)}.empty .emoji{font-size:28px;margin-bottom:8px}.empty strong{display:block;color:var(--ink);margin-bottom:5px}.footnote{margin-top:18px;color:var(--muted);font-size:12px;text-align:center}.modal-backdrop{position:fixed;inset:0;background:rgba(15,30,23,.42);display:none;align-items:center;justify-content:center;padding:18px;z-index:5}.modal-backdrop.open{display:flex}.modal{background:#fff;width:min(500px,100%);border-radius:20px;padding:24px;box-shadow:0 24px 80px #122a1c30;max-height:90vh;overflow:auto}.modal h2{margin:0 0 5px;font-size:22px}.modal p{margin:0 0 18px;color:var(--muted);font-size:13px}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{margin-bottom:14px}.field label{display:block;font-size:12px;font-weight:750;margin-bottom:6px}.field input,.field select{width:100%;padding:11px 12px;border:1px solid #dbe4de;border-radius:10px;outline:none;background:white}.field input:focus,.field select:focus{border-color:var(--green);box-shadow:0 0 0 3px #167d5a15}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}.people-tags{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 12px}.person-tag{display:flex;align-items:center;gap:6px;background:#f1f5f2;padding:6px 8px 6px 10px;border-radius:99px;font-size:12px}.person-tag button{padding:0;background:none;color:var(--muted);font-size:16px}.hint{font-size:12px;color:var(--muted);margin-top:5px}.notice{background:var(--amber);border:1px solid #f0dfaa;border-radius:11px;padding:11px 12px;color:#70571a;font-size:12px;margin-top:16px}.hidden{display:none!important}.mobile-splits{display:none}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{display:none}.mobile-splits{display:block;margin-bottom:15px}.mobile-splits select{width:100%;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff}.columns{grid-template-columns:1fr}.hero-top{display:block}.hero-buttons{margin-top:16px}.topbar{align-items:flex-start}.app{padding:16px}.stats{gap:8px}.stat{padding:12px}.stat-value{font-size:19px}}
+@media(max-width:480px){.topbar{margin-bottom:22px}.brand{font-size:18px}.top-actions button{padding:9px;font-size:12px}.stats{grid-template-columns:1fr}.stat{display:flex;align-items:center;justify-content:space-between;gap:10px}.stat-value{font-size:18px}.stat-note{display:none}.form-row{grid-template-columns:1fr}.panel{padding:15px}.hero{padding:18px}.title-line h2{font-size:22px}}
+
+.topbar{padding-bottom:18px;border-bottom:1px solid var(--line)}.top-actions{align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.user-chip{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:99px;padding:4px 12px 4px 4px;font-size:12px;color:var(--muted)}.user-chip .avatar{width:26px;height:26px;font-size:11px;background:var(--green);color:#fff}
+button:hover{transform:none;filter:brightness(.96)}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.panel,.hero,.sidebar,.stat{box-shadow:var(--shadow)}.hero{background:#fff}.stat{box-shadow:none;background:#f8faf9}.stat-value{font-variant-numeric:tabular-nums}
+.welcome h1{font-size:clamp(24px,3.5vw,30px);letter-spacing:-.8px}.expense:hover{background:#fafcfb}.dim{opacity:.55}
+.check{display:flex!important;align-items:center;gap:8px;font-weight:500!important;padding:4px 0}.check input{width:auto!important}
+
+html{-webkit-text-size-adjust:100%}body{-webkit-tap-highlight-color:transparent}button{touch-action:manipulation;min-height:38px}
+.app{padding-top:max(24px,env(safe-area-inset-top));padding-bottom:max(90px,env(safe-area-inset-bottom));padding-left:max(24px,env(safe-area-inset-left));padding-right:max(24px,env(safe-area-inset-right))}
+.sync{background:#e8f1ff;border:1px solid #c5dbff;color:#1c4a8a;border-radius:11px;padding:10px 12px;font-size:12px;margin-bottom:14px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}.charts .wide{grid-column:1/-1}
+.bar-row{display:grid;grid-template-columns:90px 1fr auto;gap:10px;align-items:center;margin:9px 0;font-size:13px}.bar-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650}.bar-track{background:#eef2ef;border-radius:99px;height:12px;overflow:hidden}.bar{height:100%;border-radius:99px;transition:width .5s}.bar-val{font-weight:800;font-variant-numeric:tabular-nums}
+.donut-wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.donut{width:150px;height:150px;flex-shrink:0}.legend{display:grid;gap:7px;font-size:13px;min-width:0}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px}.legend b{margin-left:4px}
+.tchart{width:100%;height:auto;display:block}
+.fab{display:none;position:fixed;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;font-size:28px;padding:0;box-shadow:0 8px 24px #167d5a66;z-index:4}
+@media(max-width:850px){.charts{grid-template-columns:1fr}.fab{display:block}.app{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}.modal-backdrop{align-items:flex-end;padding:0}.modal{border-radius:20px 20px 0 0;width:100%;padding-bottom:max(24px,env(safe-area-inset-bottom))}.top-actions{width:100%;justify-content:flex-start}.topbar{flex-direction:column}}
+input,select,textarea{font-size:16px!important}
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="configWarning" class="notice hidden"></div><div id="syncBanner" class="sync hidden"></div>
+  <header class="topbar">
+    <div class="brand"><div class="logo">↗</div><span>split<span style="color:var(--green)">wise</span></span></div>
+    <div class="top-actions"><div class="user-chip hidden" id="userChip"><span class="avatar" id="userAvatar"></span><span id="userStatus"></span></div><button class="secondary hidden" id="installBtn">⬇ Install app</button><button class="secondary" id="signUpBtn">Create account</button><button class="secondary" id="authButton">Sign in</button><button class="secondary" id="joinTop">Join</button><button class="secondary" id="shareTop">↗ Share</button><button class="primary" id="newSplitTop">＋ New split</button></div>
+  </header>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="side-head"><h3>Your splits</h3><button class="secondary small" id="newSplitSide">＋</button></div>
+      <div class="split-list" id="splitList"></div>
+      <div class="notice">Create one split per trip, flat or event. Each split supports up to 15 people.</div>
+    </aside>
+    <main class="main">
+      <div class="welcome"><div class="eyebrow">Dashboard</div><h1>Group expenses</h1><p>Track shared costs, review balances and settle up with confidence.</p></div>
+      <div class="mobile-splits"><select id="mobileSplitSelect" aria-label="Choose split"></select></div>
+      <section class="hero" id="hero">
+        <div class="hero-top">
+          <div><div class="title-line"><h2 id="splitTitle">Weekend getaway</h2><button class="secondary small" id="editTitle">✎ Rename</button></div><div class="subtitle" id="splitSubtitle">Your shared expense space</div></div>
+          <div class="hero-buttons"><button class="secondary" id="managePeople">♙ People <span id="peopleCount">0/15</span></button><button class="primary" id="addExpense">＋ Add expense</button></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div><div class="stat-label">Total expenses</div><div class="stat-value" id="totalSpent">₹0</div><div class="stat-note">Across this split</div></div></div>
+          <div class="stat"><div><div class="stat-label">Your balance</div><div class="stat-value" id="myBalance">₹0</div><div class="stat-note">Based on expenses added</div></div></div>
+          <div class="stat"><div><div class="stat-label">Open settlements</div><div class="stat-value" id="openSettlements">0</div><div class="stat-note">Payments still to make</div></div></div>
+        </div>
+      </section>
+      <div class="columns">
+        <section class="panel"><div class="panel-head"><div><h3>Recent expenses</h3><div class="panel-sub">All expenses in this split</div></div><button class="secondary small" id="addExpense2">＋ Add</button></div><div class="expense-list" id="expenseList"></div></section>
+        <section class="panel"><div class="panel-head"><div><h3>Who owes whom</h3><div class="panel-sub">Suggested repayments, simplified</div></div></div><div class="balance-list" id="settlementList"></div></section>
+      </div>
+      <div class="charts"><section class="panel"><div class="panel-head"><div><h3>Who paid</h3><div class="panel-sub">Share of total spend</div></div></div><div id="chartPaid"></div></section><section class="panel"><div class="panel-head"><div><h3>Net balances</h3><div class="panel-sub">Green is owed to them, red is owed by them</div></div></div><div id="chartBal"></div></section><section class="panel wide"><div class="panel-head"><div><h3>Spending, last 14 days</h3><div class="panel-sub">Daily total of expenses added</div></div></div><div id="chartTime"></div></section></div>
+<div class="footnote">Amounts in INR (₹) · Up to 15 people per split · Every expense is saved to your account</div>
+    </main>
+  </div>
+</div>
+
+<button class="primary fab" id="fab" aria-label="Add expense">＋</button>
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle">Create a split</h2><p id="modalDescription">Give this group a name and add the people sharing expenses.</p>
+    <form id="modalForm"><div id="modalContent"></div><div class="modal-actions"><button type="button" class="secondary" id="cancelModal">Cancel</button><button type="submit" class="primary" id="saveModal">Create split</button></div></form>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* SETUP: Replace both placeholders with Supabase Project URL and Publishable key.
+   Never place a service-role/secret key in browser code.
+   Requires the tables, RLS policies, and join_split RPC described in the setup guide. */
+const SUPABASE_URL = "https://iwyfkswvhqqsygxafsxt.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_4jBN8lZ8FvQWNJWZiFilpA_fOyDh0pO";
+const configured = !SUPABASE_URL.includes("YOUR_") && !SUPABASE_PUBLISHABLE_KEY.includes("YOUR_");
+const db = configured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY) : null;
+
+(() => {
+const $ = id => document.getElementById(id);
+const money = n => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2}).format(Math.abs(Number(n)||0));
+const esc = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let user=null, splits=[], activeId=null, activeData=null, members=[], expenses=[], shares=[], settlements=[];
+
+function fail(e){console.error(e);alert(e?.message||String(e))}
+function nameOf(id){return members.find(m=>m.user_id===id)?.display_name||'Member'}
+function balances(){
+ const b={};members.forEach(m=>b[m.user_id]=0);
+ expenses.forEach(e=>{const ss=shares.filter(x=>x.expense_id===e.id);if(!ss.length)return;b[e.paid_by]=(b[e.paid_by]||0)+Number(e.amount);ss.forEach(x=>b[x.user_id]=(b[x.user_id]||0)-Number(x.share_amount))});
+ settlements.filter(t=>t.status==='settled').forEach(t=>{b[t.from_user]=(b[t.from_user]||0)+Number(t.amount);b[t.to_user]=(b[t.to_user]||0)-Number(t.amount)});
+ return b;
+}
+function dues(b){
+ const cr=Object.entries(b).filter(([,v])=>v>.005).map(([id,amount])=>({id,amount})).sort((a,b)=>b.amount-a.amount);
+ const dbt=Object.entries(b).filter(([,v])=>v<-.005).map(([id,amount])=>({id,amount:-amount})).sort((a,b)=>b.amount-a.amount);
+ const out=[];let i=0,j=0;while(i<dbt.length&&j<cr.length){let amount=Math.min(dbt[i].amount,cr[j].amount);if(amount>.005)out.push({from:dbt[i].id,to:cr[j].id,amount});dbt[i].amount-=amount;cr[j].amount-=amount;if(dbt[i].amount<.005)i++;if(cr[j].amount<.005)j++}return out;
+}
+function render(){
+ $('userStatus').textContent=user?.email||'';$('userChip').classList.toggle('hidden',!user);$('userAvatar').textContent=(user?.email||'?')[0].toUpperCase();$('authButton').textContent=user?'Sign out':'Sign in';$('signUpBtn').classList.toggle('hidden',!!user);$('joinTop').classList.toggle('hidden',!user);
+ $('splitList').innerHTML=splits.map(s=>`<div class="split-item ${s.id===activeId?'active':''}" data-id="${s.id}"><div class="split-icon">✦</div><div style="min-width:0"><div class="split-name">${esc(s.title)}</div><div class="split-meta">${s.member_count??'—'} people</div></div></div>`).join('')||'<div class="empty">Sign in to see your splits.</div>';
+ $('mobileSplitSelect').innerHTML=splits.map(s=>`<option value="${s.id}" ${s.id===activeId?'selected':''}>${esc(s.title)}</option>`).join('');
+ const s=activeData;
+ ['editTitle','managePeople','addExpense','addExpense2','shareTop'].forEach(id=>$(id).classList.toggle('dim',!user||!s));
+ if(!s){$('splitTitle').textContent='Your splits';$('splitSubtitle').textContent=user?'Create a split or join using an invitation code.':'Sign in to load your groups.';$('peopleCount').textContent='0/15';$('totalSpent').textContent='₹0';$('myBalance').textContent='₹0';$('openSettlements').textContent='0';$('expenseList').innerHTML='<div class="empty"><strong>No expenses yet</strong>Create or join a split to begin.</div>';$('settlementList').innerHTML='<div class="empty">Repayment suggestions appear here.</div>';drawCharts();return}
+ $('splitTitle').textContent=s.title;$('splitSubtitle').textContent=`${members.length} of 15 people · ${expenses.length} expenses`;$('peopleCount').textContent=`${members.length}/15`;
+ const total=expenses.reduce((a,e)=>a+Number(e.amount),0),b=balances(),d=dues(b),mine=b[user?.id]||0;
+ $('totalSpent').textContent=money(total);$('myBalance').textContent=(mine>=0?'+':'−')+money(mine);$('myBalance').style.color=mine>=0?'var(--green)':'var(--red)';$('openSettlements').textContent=d.length;
+ $('expenseList').innerHTML=expenses.length?expenses.map(e=>`<div class="expense"><div class="expense-icon">🧾</div><div class="expense-body"><div class="expense-title">${esc(e.title)}</div><div class="expense-detail">Paid by ${esc(nameOf(e.paid_by))} · ${new Date(e.created_at).toLocaleDateString()}</div><div class="expense-detail">Split between ${shares.filter(x=>x.expense_id===e.id).length} people</div></div><div class="expense-amount">${money(e.amount)}</div></div>`).join(''):'<div class="empty"><strong>No expenses yet</strong>Add the first expense.</div>';
+ $('settlementList').innerHTML=d.length?d.map(x=>`<div class="balance-row"><div class="avatar">${esc(nameOf(x.from).slice(0,1).toUpperCase())}</div><div class="balance-person"><strong>${esc(nameOf(x.from))} owes</strong><span>to ${esc(nameOf(x.to))}</span></div><div class="settle-row"><div class="amount-negative">${money(x.amount)}</div><button class="primary small" data-from="${x.from}" data-to="${x.to}" data-amount="${x.amount}">Settled</button></div></div>`).join(''):'<div class="empty"><strong>All settled up</strong>No outstanding repayments.</div>';
+ document.querySelectorAll('.split-item').forEach(el=>el.onclick=()=>loadSplit(el.dataset.id).catch(fail));
+ document.querySelectorAll('[data-from]').forEach(btn=>btn.onclick=()=>settle(btn.dataset.from,btn.dataset.to,Number(btn.dataset.amount)));
+ drawCharts();
+}
+async function _loadSplits(){
+ if(!user){splits=[];activeId=null;activeData=null;render();return}
+ const {data,error}=await db.from('split_members').select('split_id,splits(id,title,invite_code,created_by)').eq('user_id',user.id);if(error)throw error;
+ splits=(data||[]).map(r=>r.splits).filter(Boolean);
+ if(!splits.some(s=>s.id===activeId))activeId=splits[0]?.id||null;
+ if(activeId)await loadSplit(activeId);else{activeData=null;render()}
+}
+async function _loadSplit(id){
+ activeId=id;const {data:s,error}=await db.from('splits').select('id,title,invite_code,created_by').eq('id',id).single();if(error)throw error;activeData=s;
+ const [m,e,t]=await Promise.all([
+  db.from('split_members').select('split_id,user_id,display_name').eq('split_id',id),
+  db.from('expenses').select('id,split_id,title,amount,paid_by,created_at').eq('split_id',id).order('created_at',{ascending:false}),
+  db.from('settlements').select('id,split_id,from_user,to_user,amount,status,created_at,settled_at').eq('split_id',id)
+ ]);
+ if(m.error)throw m.error;if(e.error)throw e.error;if(t.error)throw t.error;members=m.data||[];expenses=e.data||[];settlements=t.data||[];
+ if(expenses.length){const r=await db.from('expense_shares').select('expense_id,user_id,share_amount').in('expense_id',expenses.map(x=>x.id));if(r.error)throw r.error;shares=r.data||[]}else shares=[];
+ render();
+}
+
+const COLORS=['#167d5a','#2f80ed','#f2994a','#9b51e0','#eb5757','#00a3a3','#c2a000','#6c757d','#d6336c','#5c7cfa','#74b816','#e8590c','#0b7285','#862e9c','#495057'];
+const short=n=>'₹'+new Intl.NumberFormat('en-IN',{notation:'compact',maximumFractionDigits:1}).format(Math.abs(n));
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const isNet=e=>!navigator.onLine||/fetch|network|load failed/i.test(e?.message||'');
+const noData='<div class="empty">Add an expense to see this chart.</div>';
+function drawCharts(){
+ if(!$('chartPaid'))return;
+ const col=id=>COLORS[Math.max(0,members.findIndex(m=>m.user_id===id))%COLORS.length];
+ const paid={};expenses.forEach(e=>paid[e.paid_by]=(paid[e.paid_by]||0)+Number(e.amount));
+ const items=Object.entries(paid).map(([id,v])=>({label:nameOf(id),value:v,color:col(id)})).sort((a,b)=>b.value-a.value),t=items.reduce((a,i)=>a+i.value,0);
+ let off=0;
+ $('chartPaid').innerHTML=t?`<div class="donut-wrap"><svg class="donut" viewBox="0 0 42 42"><circle cx="21" cy="21" r="15.915" fill="none" stroke="#eef2ef" stroke-width="6"/>${items.map(i=>{const p=i.value/t*100,c=`<circle cx="21" cy="21" r="15.915" fill="none" stroke="${i.color}" stroke-width="6" stroke-dasharray="${p} ${100-p}" stroke-dashoffset="${25-off}"/>`;off+=p;return c}).join('')}<text x="21" y="22.5" text-anchor="middle" font-size="4.6" font-weight="800" fill="#17231f">${short(t)}</text></svg><div class="legend">${items.map(i=>`<div><i style="background:${i.color}"></i>${esc(i.label)} <b>${money(i.value)}</b></div>`).join('')}</div></div>`:noData;
+ const b=balances(),bl=Object.entries(b).map(([id,v])=>({label:nameOf(id),value:v})).sort((a,c)=>c.value-a.value),mx=Math.max(...bl.map(i=>Math.abs(i.value)),1);
+ $('chartBal').innerHTML=expenses.length?bl.map(i=>`<div class="bar-row"><div class="bar-label">${esc(i.label)}</div><div class="bar-track"><div class="bar" style="width:${Math.max(2,Math.abs(i.value)/mx*100)}%;background:${i.value>=0?'var(--green)':'var(--red)'}"></div></div><div class="bar-val" style="color:${i.value>=0?'var(--green)':'var(--red)'}">${i.value>=0?'+':'−'}${money(i.value)}</div></div>`).join(''):noData;
+ const days=[],tot={};for(let k=13;k>=0;k--){const d=new Date();d.setDate(d.getDate()-k);days.push(d);tot[ymd(d)]=0}
+ expenses.forEach(e=>{const k=ymd(new Date(e.created_at));if(k in tot)tot[k]+=Number(e.amount)});
+ const m=Math.max(...Object.values(tot),1);
+ $('chartTime').innerHTML=expenses.length?`<svg class="tchart" viewBox="0 0 308 130">${days.map((d,i)=>{const v=tot[ymd(d)],h=v/m*80,x=4+i*22;return `<rect x="${x}" y="${100-h}" width="16" height="${Math.max(h,v?2:0)}" rx="4" fill="${v?'#167d5a':'#eef2ef'}"/>${v?`<text x="${x+8}" y="${94-h}" text-anchor="middle" font-size="7" fill="#718078">${short(v)}</text>`:''}<text x="${x+8}" y="116" text-anchor="middle" font-size="8" fill="#718078">${d.getDate()}</text>`}).join('')}</svg>`:noData;
+}
+async function loadSplits(){
+ try{await _loadSplits();try{localStorage.setItem('sw_splits',JSON.stringify(splits))}catch{}}
+ catch(e){const c=user&&isNet(e)&&JSON.parse(localStorage.getItem('sw_splits')||'null');if(!c)throw e;splits=c;if(!splits.some(x=>x.id===activeId))activeId=splits[0]?.id||null;if(activeId)await loadSplit(activeId);else render()}
+}
+async function loadSplit(id){
+ try{await _loadSplit(id);try{localStorage.setItem('sw_c_'+id,JSON.stringify({activeData,members,expenses,shares,settlements}))}catch{}}
+ catch(e){const c=isNet(e)&&JSON.parse(localStorage.getItem('sw_c_'+id)||'null');if(!c)throw e;({activeData,members,expenses,shares,settlements}=c);activeId=id;render()}
+}
+const QK='sw_pending',getQ=()=>{try{return JSON.parse(localStorage.getItem(QK)||'[]')}catch{return[]}},setQ=q=>{try{localStorage.setItem(QK,JSON.stringify(q))}catch{}};
+function banner(){const n=getQ().length;$('syncBanner').classList.toggle('hidden',!n);$('syncBanner').textContent=n?`${n} expense${n>1?'s':''} saved on this device. Will upload automatically when you're back online.`:''}
+async function saveExpense(x){
+ const {data:e,error}=await db.from('expenses').insert({split_id:x.split_id,title:x.title,amount:x.amount,paid_by:x.paid_by}).select('id').single();if(error)throw error;
+ const {error:se}=await db.from('expense_shares').insert(x.shares.map(r=>({expense_id:e.id,...r})));
+ if(se){await db.from('expenses').delete().eq('id',e.id);throw se}
+}
+async function flushQ(){
+ if(!user||!navigator.onLine)return;const q=getQ();if(!q.length)return;const left=[];
+ for(const x of q){try{await saveExpense(x)}catch(e){if(isNet(e))left.push(x);else fail(new Error('Could not upload "'+x.title+'": '+e.message))}}
+ setQ(left);banner();if(left.length!==q.length&&activeId)await loadSplit(activeId);
+}
+function defName(){return user?.user_metadata?.display_name||user?.email?.split('@')[0]||''}
+function openForm(title,desc,fields,submit){return new Promise(res=>{
+ $('modalTitle').textContent=title;$('modalDescription').textContent=desc;$('saveModal').textContent=submit;
+ const opt=(f,o)=>`<option value="${esc(o[0])}" ${o[0]===f.value?'selected':''}>${esc(o[1])}</option>`;
+ $('modalContent').innerHTML=fields.map(f=>`<div class="field"><label>${f.label}</label>`+(f.type==='checks'?f.options.map(o=>`<label class="check"><input type="checkbox" name="${f.name}" value="${esc(o[0])}" checked> ${esc(o[1])}</label>`).join(''):f.type==='select'?`<select name="${f.name}">${f.options.map(o=>opt(f,o)).join('')}</select>`:`<input name="${f.name}" type="${f.type||'text'}" value="${esc(f.value||'')}" ${f.step?`step="${f.step}"`:''} ${f.type==='password'?'minlength="6"':''} required>`)+'</div>').join('');
+ const bd=$('modalBackdrop'),form=$('modalForm');bd.classList.add('open');
+ const close=v=>{bd.classList.remove('open');form.onsubmit=null;$('cancelModal').onclick=null;res(v)};
+ form.onsubmit=ev=>{ev.preventDefault();const fd=new FormData(form),o={};fields.forEach(f=>o[f.name]=f.type==='checks'?fd.getAll(f.name):fd.get(f.name));close(o)};
+ $('cancelModal').onclick=()=>close(null);setTimeout(()=>form.querySelector('input,select')?.focus(),50);
+})}
+async function signIn(){
+ const v=await openForm('Sign in','Use your email and password.',[{name:'email',label:'Email',type:'email'},{name:'password',label:'Password',type:'password'}],'Sign in');if(!v)return;
+ const {error}=await db.auth.signInWithPassword({email:v.email.trim(),password:v.password});if(error)throw error;
+}
+async function createAccount(){
+ const v=await openForm('Create account','Your display name is shown to group members.',[{name:'name',label:'Display name'},{name:'email',label:'Email',type:'email'},{name:'password',label:'Password (min 6 characters)',type:'password'}],'Create account');if(!v)return;
+ const {data,error}=await db.auth.signUp({email:v.email.trim(),password:v.password,options:{data:{display_name:v.name.trim()}}});if(error)throw error;
+ if(!data.session)alert('Account created. Check your email to confirm it, then sign in.');
+}
+async function createSplit(){
+ const v=await openForm('Create a split','Name the group, then invite others with the invitation code.',[{name:'title',label:'Split name (e.g. Goa trip)'},{name:'name',label:'Your name in this group',value:defName()}],'Create split');if(!v)return;
+ const {data,error}=await db.rpc('create_split',{p_title:v.title.trim(),p_display_name:v.name.trim()});if(error)throw error;
+ activeId=data.id;await loadSplits();
+}
+async function joinSplit(code,display_name){
+ const {data,error}=await db.rpc('join_split',{p_invite_code:code.trim(),p_display_name:display_name.trim()});if(error)throw error;
+ if(data?.split_id)activeId=data.split_id;await loadSplits();
+}
+async function joinFlow(code){
+ const v=await openForm('Join a split','Enter the invitation code you received.',[{name:'code',label:'Invitation code',value:code||''},{name:'name',label:'Your name in this group',value:defName()}],'Join split');if(v)await joinSplit(v.code,v.name);
+}
+async function addExpense(){
+ if(!user)return alert('Please sign in first.');if(!activeData)return alert('Create or join a split first.');
+ const opts=members.map(m=>[m.user_id,m.display_name]);
+ const v=await openForm('Add expense','Split equally between the people you select.',[{name:'title',label:'Description'},{name:'amount',label:'Amount (₹)',type:'number',step:'0.01'},{name:'payer',label:'Paid by',type:'select',options:opts,value:user.id},{name:'who',label:'Split between',type:'checks',options:opts}],'Add expense');if(!v)return;
+ const amount=Number(v.amount);if(!(amount>0))throw new Error('Enter a valid positive amount.');
+ const unique=[...new Set(v.who)];if(!unique.length)throw new Error('Choose at least one person to split with.');
+ const rounded=Math.round(amount*100)/100,each=Math.floor(rounded/unique.length*100)/100,remaining=Math.round(rounded*100)-Math.round(each*100)*(unique.length-1);
+ const shares2=unique.map((user_id,i)=>({user_id,share_amount:i===unique.length-1?remaining/100:each}));
+ const item={split_id:activeId,title:v.title.trim(),amount:rounded,paid_by:v.payer,shares:shares2};
+ try{await saveExpense(item)}catch(e){if(!isNet(e))throw e;setQ([...getQ(),item]);banner();alert('You are offline. The expense is saved on this device and will upload automatically.');return}
+ await loadSplit(activeId);
+}
+async function settle(from,to,amount){
+ if(!confirm(`Mark ${money(amount)} from ${nameOf(from)} to ${nameOf(to)} as settled?`))return;
+ const {error}=await db.from('settlements').insert({split_id:activeId,from_user:from,to_user:to,amount:Math.round(amount*100)/100,status:'settled',settled_at:new Date().toISOString()});if(error)throw error;await loadSplit(activeId);
+}
+function inviteText(){const s=activeData;return `Join "${s.title}" on Splitwise.\nInvitation code: ${s.invite_code}\n${location.origin}${location.pathname}#join=${s.invite_code}`}
+async function managePeople(){
+ const s=activeData;if(!s)return alert('Create or join a split first.');
+ const v=await openForm('People · '+s.title,`${members.map(m=>m.display_name).join(', ')} (${members.length}/15). Invitation code: ${s.invite_code}`,[],'Copy invitation');
+ if(v){try{await navigator.clipboard.writeText(inviteText());alert('Invitation copied.')}catch{prompt('Copy this invitation:',inviteText())}}
+}
+async function shareSplit(){
+ if(!user)return alert('Please sign in first.');if(!activeData)return alert('Create a split first, then share it.');
+ const text=inviteText();
+ try{if(navigator.share)await navigator.share({title:activeData.title,text});else{await navigator.clipboard.writeText(text);alert('Invitation copied to clipboard.')}}catch(e){if(e.name!=='AbortError')prompt('Copy this invitation:',text)}
+}
+$('newSplitTop').onclick=$('newSplitSide').onclick=()=>user?createSplit().catch(fail):alert('Please sign in first.');
+$('authButton').onclick=async()=>{if(!configured)return alert('Add your Supabase URL and publishable key first.');try{if(user){const {error}=await db.auth.signOut();if(error)throw error}else await signIn()}catch(e){fail(e)}};
+$('signUpBtn').onclick=()=>createAccount().catch(fail);
+$('joinTop').onclick=()=>joinFlow().catch(fail);
+$('editTitle').onclick=async()=>{if(!user||!activeData)return;try{const v=await openForm('Rename split','',[{name:'title',label:'Split name',value:activeData.title}],'Save');if(!v)return;const {error}=await db.from('splits').update({title:v.title.trim()}).eq('id',activeId);if(error)throw error;await loadSplits()}catch(e){fail(e)}};
+$('managePeople').onclick=()=>managePeople().catch(fail);
+$('addExpense').onclick=$('addExpense2').onclick=()=>addExpense().catch(fail);
+$('shareTop').onclick=()=>shareSplit().catch(fail);
+$('fab').onclick=()=>addExpense().catch(fail);
+let dip=null;const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;$('installBtn').classList.remove('hidden')});
+if(isIOS&&!standalone)$('installBtn').classList.remove('hidden');
+$('installBtn').onclick=async()=>{if(dip){dip.prompt();await dip.userChoice;dip=null;$('installBtn').classList.add('hidden')}else alert('On iPhone or iPad: tap the Share button in Safari, then choose "Add to Home Screen".')};
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+addEventListener('online',()=>flushQ().catch(fail));banner();
+$('mobileSplitSelect').onchange=e=>loadSplit(e.target.value).catch(fail);
+if(!configured){$('configWarning').classList.remove('hidden');$('configWarning').textContent='Setup required: add your Supabase project URL and publishable key in index.html.';render();return}
+let pendingJoin=new URLSearchParams(location.hash.slice(1)).get('join');
+function maybeJoin(){if(pendingJoin&&user){const c=pendingJoin;pendingJoin=null;history.replaceState(null,'',location.pathname);joinFlow(c).catch(fail)}}
+db.auth.onAuthStateChange((_event,session)=>{user=session?.user||null;setTimeout(()=>loadSplits().then(flushQ).then(maybeJoin).catch(fail),0)});
+db.auth.getSession().then(({data,error})=>{if(error)throw error;user=data.session?.user||null;return loadSplits()}).then(maybeJoin).catch(fail);
+if(pendingJoin)setTimeout(()=>{if(!user)alert('Sign in or create an account to join this split.')},900);
+})();
+</script>
+</body>
+</html>
