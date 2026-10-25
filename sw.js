@@ -1,4 +1,4 @@
-const V='splitwise-v3',LIB='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+const V='splitwise-v4',LIB='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
 const SHELL=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable-512.png','apple-touch-icon.png'];
 self.addEventListener('install',e=>e.waitUntil((async()=>{
   const c=await caches.open(V);
