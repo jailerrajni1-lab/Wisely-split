@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#167d5a"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Splitwise"><meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png"><link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <title>Splitwise — Shared Expenses</title>
 <style>
 :root{--ink:#172b24;--muted:#6b7c73;--green:#147a55;--on-green:#fff;--green2:#e6f5ed;--bg:#f4f7f5;--card:#fff;--line:#e3ebe6;--red:#bb4545;--red2:#fdeeee;--track:#eaf0ec;--soft:#f6faf7;--amber:#fff5dc;--amber-ink:#70571a;--blue:#e8f1ff;--blue-ink:#1c4a8a;--shadow:0 8px 28px rgba(26,58,42,.06)}
@@ -14,7 +14,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,ui-sans
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer;border:0;border-radius:11px;padding:10px 14px;font-weight:650;transition:.15s;touch-action:manipulation;min-height:38px}
 button:hover{filter:brightness(.96)}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 .primary{background:var(--green);color:var(--on-green)}
 .secondary{background:var(--card);border:1px solid var(--line);color:var(--ink)}
 .danger{color:var(--red);background:var(--red2)}
@@ -160,7 +160,7 @@ input,select,textarea{font-size:16px!important}
 /* modal + toast */
 .modal-backdrop{position:fixed;inset:0;background:rgba(10,20,15,.5);display:none;align-items:center;justify-content:center;padding:18px;z-index:20}
 .modal-backdrop.open{display:flex}
-.modal{background:var(--card);width:min(500px,100%);border-radius:20px;padding:24px;box-shadow:0 24px 80px #0004;max-height:90vh;overflow:auto}
+.modal{background:var(--card);width:min(500px,100%);border-radius:20px;padding:24px;box-shadow:0 24px 80px #0004;max-height:90vh;max-height:90dvh;overflow:auto}
 .modal h2{margin:0 0 5px;font-size:22px}.modal p{margin:0 0 18px;color:var(--muted);font-size:13px}
 .field{margin-bottom:14px}.field label{display:block;font-size:12px;font-weight:750;margin-bottom:6px}
 .field input,.field select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;outline:none;background:var(--card)}
@@ -224,7 +224,8 @@ input,select,textarea{font-size:16px!important}
 const SUPABASE_URL = "https://iwyfkswvhqqsygxafsxt.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_4jBN8lZ8FvQWNJWZiFilpA_fOyDh0pO";
 const configured = !SUPABASE_URL.includes("YOUR_") && !SUPABASE_PUBLISHABLE_KEY.includes("YOUR_");
-const db = configured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY) : null;
+const libOk = !!(window.supabase && window.supabase.createClient);
+const db = configured && libOk ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY) : null;
 
 (() => {
 const $ = id => document.getElementById(id);
@@ -249,6 +250,7 @@ const fdate=s=>s?new Date(s).toLocaleDateString('en-IN',{day:'numeric',month:'sh
 /* ---------- state ---------- */
 let user=null, splits=[], D={};          // D[splitId] = {s, members, expenses, shares, settlements}
 const ui={q:'',flt:'all',open:null,loading:false,homeSel:null};
+let booted=false;
 const isNet=e=>!navigator.onLine||/fetch|network|load failed/i.test(e?.message||'');
 function toast(msg,err){const t=document.createElement('div');t.className='toast'+(err?' err':'');t.textContent=msg;$('toasts').appendChild(t);setTimeout(()=>t.remove(),err?4500:2600)}
 function fail(e){console.error(e);toast(e?.message||String(e),true)}
@@ -290,28 +292,32 @@ function activityOf(d){
 const statusChip=st=>st.owed>.005?`<span class="chip pos">You are owed ${money(st.owed)}</span>`:st.owe>.005?`<span class="chip neg">You owe ${money(st.owe)}</span>`:'<span class="chip">Settled up</span>';
 
 /* ---------- data loading ---------- */
+/* ---------- data loading (paged, de-duplicated, cached per user) ---------- */
+const PAGE=1000;
+async function pages(build){const out=[];for(let f=0;;f+=PAGE){const {data,error}=await build().range(f,f+PAGE-1);if(error)throw error;out.push(...data);if(data.length<PAGE)break}return out}
 async function fetchAll(){
  const {data,error}=await db.from('split_members').select('split_id,splits(id,title,invite_code,created_by)').eq('user_id',user.id);if(error)throw error;
  const list=(data||[]).map(r=>r.splits).filter(Boolean),ids=list.map(s=>s.id),out={};
  list.forEach(s=>out[s.id]={s,members:[],expenses:[],shares:[],settlements:[]});
  if(ids.length){
   const [m,e,t]=await Promise.all([
-   db.from('split_members').select('split_id,user_id,display_name').in('split_id',ids),
-   db.from('expenses').select('id,split_id,title,amount,paid_by,created_at').in('split_id',ids).order('created_at',{ascending:false}),
-   db.from('settlements').select('id,split_id,from_user,to_user,amount,status,created_at,settled_at').in('split_id',ids)]);
-  if(m.error)throw m.error;if(e.error)throw e.error;if(t.error)throw t.error;
-  m.data.forEach(x=>out[x.split_id]?.members.push(x));e.data.forEach(x=>out[x.split_id]?.expenses.push(x));t.data.forEach(x=>out[x.split_id]?.settlements.push(x));
-  const eids=e.data.map(x=>x.id),byExp={};e.data.forEach(x=>byExp[x.id]=x.split_id);
-  for(let i=0;i<eids.length;i+=100){const r=await db.from('expense_shares').select('expense_id,user_id,share_amount').in('expense_id',eids.slice(i,i+100));if(r.error)throw r.error;r.data.forEach(x=>out[byExp[x.expense_id]]?.shares.push(x))}
+   pages(()=>db.from('split_members').select('split_id,user_id,display_name').in('split_id',ids).order('user_id')),
+   pages(()=>db.from('expenses').select('id,split_id,title,amount,paid_by,created_at').in('split_id',ids).order('created_at',{ascending:false}).order('id')),
+   pages(()=>db.from('settlements').select('id,split_id,from_user,to_user,amount,status,created_at,settled_at').in('split_id',ids).order('created_at').order('id'))]);
+  m.forEach(x=>out[x.split_id]?.members.push(x));e.forEach(x=>out[x.split_id]?.expenses.push(x));t.forEach(x=>out[x.split_id]?.settlements.push(x));
+  const byExp={};e.forEach(x=>byExp[x.id]=x.split_id);const eids=e.map(x=>x.id);
+  for(let i=0;i<eids.length;i+=50){const r=await pages(()=>db.from('expense_shares').select('expense_id,user_id,share_amount').in('expense_id',eids.slice(i,i+50)).order('expense_id').order('user_id'));r.forEach(x=>out[byExp[x.expense_id]]?.shares.push(x))}
  }
  return {list,out};
 }
-async function loadAll(){
+async function _loadAll(){
  if(!user){splits=[];D={};render();return}
- try{const {list,out}=await fetchAll();splits=list;D=out;try{localStorage.setItem('sw_all',JSON.stringify({splits,D}))}catch{}}
- catch(e){let c=null;try{c=isNet(e)&&JSON.parse(localStorage.getItem('sw_all')||'null')}catch{}if(!c)throw e;splits=c.splits;D=c.D;toast('Offline — showing saved data')}
- render();
+ try{const {list,out}=await fetchAll();splits=list;D=out;try{localStorage.setItem('sw_all',JSON.stringify({uid:user.id,splits,D}))}catch{}}
+ catch(e){let c=null;try{c=isNet(e)&&JSON.parse(localStorage.getItem('sw_all')||'null')}catch{}if(!c||c.uid!==user.id)throw e;splits=c.splits;D=c.D;toast('Offline — showing saved data')}
+ render();banner();
 }
+let busy=null,again=false;
+function loadAll(){if(busy){again=true;return busy}busy=(async()=>{try{do{again=false;await _loadAll()}while(again)}finally{busy=null}})();return busy}
 
 /* ---------- views ---------- */
 const emptyState=(emoji,title,text,btn)=>`<div class="empty"><div class="emoji">${emoji}</div><strong>${title}</strong>${text}${btn||''}</div>`;
@@ -334,7 +340,7 @@ function homeView(){
  const toPay=ids.flatMap(id=>mine(D[id]).ds.filter(x=>x.from===user.id).map(x=>({...x,gid:id})));
  const scope=sel?esc(D[sel].s.title):'';
  const note=sel?'In this group':`Across ${splits.length} ${splits.length===1?'group':'groups'}`;
- return `<div class="page-head"><div><div class="eyebrow">HOME</div><h1>${greet}, ${esc(defName())}</h1><p>${sel?`Showing balances for <b>${scope}</b>.`:'Showing all your groups. Tap a group to see just its balance.'}</p></div></div>
+ return `<div class="page-head"><div><div class="eyebrow">HOME</div><h1>${greet}${defName()?', '+esc(defName()):''}</h1><p>${sel?`Showing balances for <b>${scope}</b>.`:'Showing all your groups. Tap a group to see just its balance.'}</p></div></div>
  <section class="hero">${sel?`<div class="row" style="justify-content:space-between;margin-bottom:14px"><span class="chip pos">Showing: ${scope}</span><div class="row"><button class="secondary small" data-act="home-select" data-id="">Show all groups</button><button class="secondary small" data-act="open-group" data-id="${sel}">Open group →</button></div></div>`:''}<div class="stats" style="margin-top:0">
   <div class="stat"><div class="stat-label">Overall balance</div><div class="stat-value ${net>=0?'pos':'neg'}">${net>.005?'+':net<-.005?'−':''}${money(net)}</div><div class="stat-note">${note}</div></div>
   <div class="stat"><div class="stat-label">You are owed</div><div class="stat-value pos">${money(owed)}</div><div class="stat-note">Others owe you</div></div>
@@ -358,7 +364,7 @@ function txHTML(d){
   ${open?`<div class="expense-more">${ss.map(x=>`<div class="line"><span>${esc(x.user_id===user.id?'You':nameOf(d,x.user_id))}</span><span>${money(x.share_amount)}</span></div>`).join('')||'<div class="line">No split details</div>'}${e.paid_by===user.id?`<div class="row"><button class="danger small" data-act="del-exp" data-id="${e.id}" data-gid="${d.s.id}">Delete expense</button></div>`:''}</div>`:''}</div>`;
  }).join('');
 }
-function renderTx(){const c=cur();if(c.v==='group'&&$('txList'))$('txList').innerHTML=txHTML(D[c.id])}
+function renderTx(){const c=cur();if(c.v==='group'&&$('txList')){$('txList').innerHTML=txHTML(D[c.id]);a11y()}}
 
 function groupView(id){
  const d=D[id],st=mine(d),act=activityOf(d).sort((a,b)=>new Date(b.at)-new Date(a.at)).slice(0,10);
@@ -393,7 +399,7 @@ function settingsView(){
   <div class="set-row"><div class="set-label"><strong>Export to CSV</strong><span>Download every expense from all your groups — opens in Excel or Sheets.</span></div><button class="secondary small" data-act="export">Export</button></div>
   <div class="set-row"><div class="set-label"><strong>Clear offline cache</strong><span>Removes saved copies on this device. Unsent offline expenses are kept.</span></div><button class="secondary small" data-act="clearcache">Clear</button></div></section>
  <section class="panel"><div class="panel-head"><div><h3>App</h3></div></div>
-  <div class="set-row"><div class="set-label"><strong>Install app</strong><span>Add Splitwise to your home screen for quick, offline access.</span></div><button class="secondary small" data-act="install">Install</button></div>
+  <div class="set-row"><div class="set-label"><strong>Install app</strong><span>Add Splitwise to your home screen for quick, offline access.</span></div>${isStandalone()?'<span class="chip">Installed</span>':'<button class="secondary small" data-act="install">Install</button>'}</div>
   <div class="set-row"><div class="set-label"><strong>Version</strong><span>Splitwise ${APP_VERSION} · Amounts in INR (₹) · up to 15 people per group</span></div></div>
   <div class="set-row"><div class="set-label"><strong>Sign out</strong><span>You can sign back in anytime.</span></div><button class="danger small" data-act="signout">Sign out</button></div></section></div></div>`;
 }
@@ -410,10 +416,11 @@ function chrome(){
  $('bottomNav').innerHTML=on?`${bn('home','⌂','Home')}${bn('groups','☷','Groups')}<button class="plus" data-act="plus" aria-label="Add expense or create group"><span>＋</span>Add</button>${bn('settings','⚙','Settings')}`:'';
 }
 function render(){
+ if(!booted){$('view').innerHTML='<div class="panel"><div class="empty"><strong>Loading…</strong></div></div>';return}
  chrome();const c=cur(),el=$('view');
- if(!user){el.innerHTML=landing();return}
+ if(!user){el.innerHTML=landing();a11y();return}
  el.innerHTML=(c.v==='home'?homeView():c.v==='groups'?groupsView():c.v==='group'?groupView(c.id):settingsView())+(c.v!=='settings'?'<div class="footnote">Amounts in INR (₹) · Up to 15 people per group · Every expense is saved to your account</div>':'');
- if(c.v==='group')drawCharts(D[c.id]);
+ if(c.v==='group')drawCharts(D[c.id]);a11y();
 }
 
 /* ---------- charts ---------- */
@@ -437,39 +444,65 @@ function drawCharts(d){
 
 /* ---------- offline queue ---------- */
 const QK='sw_pending',getQ=()=>{try{return JSON.parse(localStorage.getItem(QK)||'[]')}catch{return[]}},setQ=q=>{try{localStorage.setItem(QK,JSON.stringify(q))}catch{}};
-function banner(){const n=getQ().length;$('syncBanner').classList.toggle('hidden',!n);$('syncBanner').textContent=n?`${n} expense${n>1?'s':''} saved on this device. Will upload automatically when you're back online.`:''}
+function banner(){const n=getQ().filter(x=>!x.uid||x.uid===user?.id).length;$('syncBanner').classList.toggle('hidden',!n);$('syncBanner').textContent=n?`${n} expense${n>1?'s':''} saved on this device. Will upload automatically when you're back online.`:''}
 async function saveExpense(x){
  const {data:e,error}=await db.from('expenses').insert({split_id:x.split_id,title:x.title,amount:x.amount,paid_by:x.paid_by}).select('id').single();if(error)throw error;
  const {error:se}=await db.from('expense_shares').insert(x.shares.map(r=>({expense_id:e.id,...r})));
  if(se){await db.from('expenses').delete().eq('id',e.id);throw se}
 }
 async function flushQ(){
- if(!user||!navigator.onLine)return;const q=getQ();if(!q.length)return;const left=[];
+ if(!user||!navigator.onLine)return;
+ const all=getQ(),own=x=>!x.uid||x.uid===user.id,q=all.filter(own),others=all.filter(x=>!own(x));if(!q.length)return;const left=[];
  for(const x of q){try{await saveExpense(x)}catch(e){if(isNet(e))left.push(x);else fail(new Error('Could not upload "'+x.title+'": '+e.message))}}
- setQ(left);banner();if(left.length!==q.length){toast('Offline expenses uploaded');await loadAll()}
+ setQ([...others,...left]);banner();if(left.length!==q.length){toast('Offline expenses uploaded');await loadAll()}
 }
 
 /* ---------- forms ---------- */
+let closePrev=null;
+addEventListener('keydown',e=>{if(e.key==='Escape'&&closePrev)closePrev(null)});
 function openForm(title,desc,fields,submit){return new Promise(res=>{
+ if(closePrev)closePrev(null);
  $('modalTitle').textContent=title;$('modalDescription').textContent=desc;$('saveModal').textContent=submit;
  const opt=(f,o)=>`<option value="${esc(o[0])}" ${o[0]===f.value?'selected':''}>${esc(o[1])}</option>`;
- $('modalContent').innerHTML=fields.map(f=>`<div class="field"><label>${f.label}</label>`+(f.type==='checks'?f.options.map(o=>`<label class="check"><input type="checkbox" name="${f.name}" value="${esc(o[0])}" checked> ${esc(o[1])}</label>`).join(''):f.type==='select'?`<select name="${f.name}">${f.options.map(o=>opt(f,o)).join('')}</select>`:`<input name="${f.name}" type="${f.type||'text'}" value="${esc(f.value||'')}" ${f.step?`step="${f.step}"`:''} ${f.type==='password'?'minlength="6"':''} required>`)+'</div>').join('');
+ $('modalContent').innerHTML=fields.map(f=>`<div class="field"><label>${f.label}</label>`+(f.type==='checks'?f.options.map(o=>`<label class="check"><input type="checkbox" name="${f.name}" value="${esc(o[0])}" checked> ${esc(o[1])}</label>`).join(''):f.type==='select'?`<select name="${f.name}">${f.options.map(o=>opt(f,o)).join('')}</select>`:`<input name="${f.name}" type="${f.type||'text'}" value="${esc(f.value||'')}" ${f.step?`step="${f.step}"`:''} ${f.type==='password'?'minlength="6"':''} autocomplete="${f.auto||'off'}" required>`)+'</div>').join('');
  const bd=$('modalBackdrop'),form=$('modalForm');bd.classList.add('open');
- const close=v=>{bd.classList.remove('open');form.onsubmit=null;$('cancelModal').onclick=null;res(v)};
+ const close=v=>{bd.classList.remove('open');form.onsubmit=null;$('cancelModal').onclick=null;bd.onclick=null;closePrev=null;res(v)};
  form.onsubmit=ev=>{ev.preventDefault();const fd=new FormData(form),o={};fields.forEach(f=>o[f.name]=f.type==='checks'?fd.getAll(f.name):fd.get(f.name));close(o)};
- $('cancelModal').onclick=()=>close(null);setTimeout(()=>form.querySelector('input,select')?.focus(),50);
+ $('cancelModal').onclick=()=>close(null);closePrev=close;bd.onclick=ev=>{if(ev.target===bd)close(null)};setTimeout(()=>(form.querySelector('input,select')||$('saveModal')).focus(),50);
 })}
-const needDb=()=>{if(!configured){toast('Add your Supabase URL and publishable key first.',true);return false}return true};
-async function signIn(){
+const needDb=()=>{if(!configured){toast('Add your Supabase URL and publishable key first.',true);return false}if(!db){toast('Could not load the sign-in library. Check your internet connection and reload.',true);return false}return true};
+$('modalForm').addEventListener('submit',e=>e.preventDefault());
+async function rememberLogin(id,pw){try{if(window.PasswordCredential&&navigator.credentials&&navigator.credentials.store)await navigator.credentials.store(new PasswordCredential({id,password:pw}))}catch{}}
+async function signIn(prefill){
  if(!needDb())return;
- const v=await openForm('Sign in','Use your email and password.',[{name:'email',label:'Email',type:'email'},{name:'password',label:'Password',type:'password'}],'Sign in');if(!v)return;
+ const p=openForm('Sign in','Use your email and password.',[{name:'email',label:'Email',type:'email',value:prefill||'',auto:'username'},{name:'password',label:'Password',type:'password',auto:'current-password'}],'Sign in');
+ $('modalContent').insertAdjacentHTML('beforeend','<button type="button" class="ghost small" id="forgotBtn">Forgot password?</button>');
+ let forgot=null;
+ $('forgotBtn').onclick=()=>{forgot=$('modalContent').querySelector('[name=email]').value;if(closePrev)closePrev(null)};
+ const v=await p;
+ if(forgot!==null)return forgotFlow(forgot);
+ if(!v)return;
  const {error}=await db.auth.signInWithPassword({email:v.email.trim(),password:v.password});if(error)throw error;
+ await rememberLogin(v.email.trim(),v.password);
+}
+async function forgotFlow(prefill){
+ if(!needDb())return;
+ const v=await openForm('Reset password','Enter your account email. We will send a link to choose a new password.',[{name:'email',label:'Email',type:'email',value:prefill||'',auto:'username'}],'Send reset link');if(!v)return;
+ const {error}=await db.auth.resetPasswordForEmail(v.email.trim(),{redirectTo:location.origin+location.pathname});if(error)throw error;
+ toast('If an account exists for that email, a reset link is on its way. Check your inbox and spam folder.');
+}
+async function newPassword(title){
+ const v=await openForm(title,'Choose a new password (min 6 characters).',[{name:'p',label:'New password',type:'password',auto:'new-password'},{name:'p2',label:'Confirm new password',type:'password',auto:'new-password'}],'Update password');if(!v)return;
+ if(v.p!==v.p2)throw new Error('The two passwords do not match.');
+ const {error}=await db.auth.updateUser({password:v.p});if(error)throw error;
+ if(user&&user.email)await rememberLogin(user.email,v.p);
+ toast('Password updated');
 }
 async function createAccount(){
  if(!needDb())return;
- const v=await openForm('Create account','Your display name is shown to group members.',[{name:'name',label:'Display name'},{name:'email',label:'Email',type:'email'},{name:'password',label:'Password (min 6 characters)',type:'password'}],'Create account');if(!v)return;
+ const v=await openForm('Create account','Your display name is shown to group members.',[{name:'name',label:'Display name',auto:'name'},{name:'email',label:'Email',type:'email',auto:'username'},{name:'password',label:'Password (min 6 characters)',type:'password',auto:'new-password'}],'Create account');if(!v)return;
  const {data,error}=await db.auth.signUp({email:v.email.trim(),password:v.password,options:{data:{display_name:v.name.trim()}}});if(error)throw error;
- if(!data.session)toast('Account created. Check your email to confirm it, then sign in.');
+ if(!data.session)toast('Account created. Check your email to confirm it, then sign in.');else await rememberLogin(v.email.trim(),v.password);
 }
 async function createSplit(){
  const v=await openForm('Create a group','Name the group, then invite others with the invitation code.',[{name:'title',label:'Group name (e.g. Goa trip)'},{name:'name',label:'Your name in this group',value:defName()}],'Create group');if(!v)return;
@@ -487,10 +520,11 @@ async function addExpense(gid){
  if(!gid){const p=await openForm('Add expense','Which group is this expense for?',[{name:'g',label:'Group',type:'select',options:splits.map(s=>[s.id,s.title])}],'Continue');if(!p)return;gid=p.g}
  const d=D[gid],opts=d.members.map(m=>[m.user_id,m.display_name]);
  const v=await openForm('Add expense · '+d.s.title,'Split equally between the people you select.',[{name:'title',label:'Description'},{name:'amount',label:'Amount (₹)',type:'number',step:'0.01'},{name:'payer',label:'Paid by',type:'select',options:opts,value:user.id},{name:'who',label:'Split between',type:'checks',options:opts}],'Add expense');if(!v)return;
+ if(!v.title.trim())throw new Error('Enter a description.');
  const amount=Number(v.amount);if(!(amount>0))throw new Error('Enter a valid positive amount.');
  const unique=[...new Set(v.who)];if(!unique.length)throw new Error('Choose at least one person to split with.');
  const rounded=Math.round(amount*100)/100,each=Math.floor(rounded/unique.length*100)/100,remaining=Math.round(rounded*100)-Math.round(each*100)*(unique.length-1);
- const item={split_id:gid,title:v.title.trim(),amount:rounded,paid_by:v.payer,shares:unique.map((user_id,i)=>({user_id,share_amount:i===unique.length-1?remaining/100:each}))};
+ const item={uid:user.id,split_id:gid,title:v.title.trim(),amount:rounded,paid_by:v.payer,shares:unique.map((user_id,i)=>({user_id,share_amount:i===unique.length-1?remaining/100:each}))};
  try{await saveExpense(item)}catch(e){if(!isNet(e))throw e;setQ([...getQ(),item]);banner();toast('You are offline — expense saved on this device');return}
  await loadAll();toast('Expense added');
 }
@@ -512,20 +546,46 @@ async function shareSplit(gid){
  try{if(navigator.share)await navigator.share({title:D[gid].s.title,text});else await copyText(text,'Invitation copied to clipboard')}catch(e){if(e.name!=='AbortError')prompt('Copy this invitation:',text)}
 }
 function exportCSV(){
- const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',rows=[['Group','Date','Description','Paid by','Amount (INR)','Split between'].map(q).join(',')];
+ const q=v=>{let t=String(v??'');if(/^[=+\-@\t\r]/.test(t))t="'"+t;return '"'+t.replace(/"/g,'""')+'"'},rows=[['Group','Date','Description','Paid by','Amount (INR)','Split between'].map(q).join(',')];
  splits.forEach(s=>{const d=D[s.id];d.expenses.forEach(e=>rows.push([s.title,new Date(e.created_at).toISOString().slice(0,10),e.title,nameOf(d,e.paid_by),Number(e.amount).toFixed(2),d.shares.filter(x=>x.expense_id===e.id).map(x=>nameOf(d,x.user_id)).join('; ')].map(q).join(',')))});
  if(rows.length===1)return toast('No expenses to export yet');
- const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+rows.join('\n')],{type:'text/csv'}));a.download='splitwise-expenses.csv';document.body.appendChild(a);a.click();a.remove();toast('Export downloaded');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv'}));a.download='splitwise-expenses.csv';document.body.appendChild(a);a.click();a.remove();toast('Export downloaded');
 }
 
 /* ---------- install ---------- */
-let dip=null;const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+let dip=null;
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const inApp=/FBAN|FBAV|Instagram|Line\/|MicroMessenger|WhatsApp|Snapchat|Twitter/i.test(navigator.userAgent);
+const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e});
+addEventListener('appinstalled',()=>{dip=null;toast('Splitwise installed');if(cur().v==='settings')render()});
+async function installChecks(){
+ const L=[];L.push([location.protocol==='https:'||location.hostname==='localhost','Page is served over HTTPS']);
+ try{const r=await navigator.serviceWorker.getRegistration();L.push([!!(r&&(r.active||r.waiting)),'Service worker is registered'])}catch{L.push([false,'Service worker is not available'])}
+ try{
+  const href=document.querySelector('link[rel=manifest]').href,m=await (await fetch(href,{cache:'no-store'})).json();
+  L.push([m.display==='standalone'&&!!m.start_url&&!!(m.name||m.short_name),'Manifest has name, start_url and standalone display']);
+  for(const n of [192,512]){
+   const ic=(m.icons||[]).find(i=>i.sizes===n+'x'+n&&/any/.test(i.purpose||'any'));let ok=false;
+   if(ic)ok=await new Promise(res=>{const im=new Image();im.onload=()=>res(im.naturalWidth===n&&im.naturalHeight===n);im.onerror=()=>res(false);im.src=new URL(ic.src,href).href});
+   L.push([ok,n+'×'+n+' icon loads at the right size']);
+  }
+ }catch{L.push([false,'Manifest could not be read'])}
+ return L;
+}
+async function installHelp(){
+ const safari=isIOS&&!/CriOS|FxiOS|EdgiOS|OPiOS/i.test(navigator.userAgent);
+ const steps=isIOS?(inApp?['Open this page in Safari (use the ⋯ or share icon, then "Open in Safari").','Tap Share, then "Add to Home Screen", then Add.']:safari?['Tap the Share button (square with an arrow) in Safari.','Scroll down and tap "Add to Home Screen".','Tap Add.']:['Tap the Share button, then "Add to Home Screen" (needs iOS 16.4 or newer), then Add.','If you do not see it, open this page in Safari instead.'])
+  :(inApp?['Open this page in Chrome (menu, then "Open in browser").','Then use the Chrome menu: "Install app" or "Add to Home screen".']:['Open the browser menu (⋮).','Tap "Install app" or "Add to Home screen".','If neither appears, reload this page once and try again.']);
+ const checks=isIOS?[]:await installChecks();
+ const p=openForm('Install Splitwise','Add it to your home screen for quick, offline access.',[],'Got it');
+ $('modalContent').innerHTML='<ol style="padding-left:20px;margin:0 0 14px">'+steps.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ol>'+(checks.length?'<div style="font-size:12px;color:var(--muted)">'+checks.map(c=>'<div>'+(c[0]?'✓ ':'✗ ')+esc(c[1])+'</div>').join('')+'</div>':'');
+ await p;
+}
 async function install(){
- if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)return toast('App is already installed');
- if(dip){dip.prompt();await dip.userChoice;dip=null}
- else if(isIOS)alert('On iPhone or iPad: tap the Share button in Safari, then choose "Add to Home Screen".');
- else toast('Use your browser menu → "Install app" / "Add to Home screen"');
+ if(isStandalone())return toast('App is already installed');
+ if(dip){const p=dip;dip=null;try{await p.prompt();await p.userChoice}catch{}return}
+ return installHelp();
 }
 
 /* ---------- actions ---------- */
@@ -546,18 +606,18 @@ async function run(a,t,id){
   case 'join':return joinFlow();
   case 'signin':return signIn();
   case 'signup':return createAccount();
-  case 'signout':{const {error}=await db.auth.signOut();if(error)throw error;go('home');return}
-  case 'rename':{const d=D[id],v=await openForm('Rename group','',[{name:'title',label:'Group name',value:d.s.title}],'Save');if(!v)return;const {error}=await db.from('splits').update({title:v.title.trim()}).eq('id',id);if(error)throw error;await loadAll();return toast('Group renamed')}
+  case 'signout':{const {error}=await db.auth.signOut();if(error)throw error;try{localStorage.removeItem('sw_all')}catch{}ui.homeSel=null;go('home');return}
+  case 'rename':{const d=D[id],v=await openForm('Rename group','',[{name:'title',label:'Group name',value:d.s.title}],'Save');if(!v)return;const r=await db.from('splits').update({title:v.title.trim()}).eq('id',id).select('id');if(r.error)throw r.error;if(!r.data?.length)throw new Error('You do not have permission to rename this group.');await loadAll();return toast('Group renamed')}
   case 'people':return managePeople(id);
   case 'share':return shareSplit(id);
   case 'settle':return settle(id,t.dataset.from,t.dataset.to,Number(t.dataset.amount));
   case 'toggle-exp':ui.open=ui.open===id?null:id;return renderTx();
-  case 'del-exp':{if(!confirm('Delete this expense? This cannot be undone.'))return;await db.from('expense_shares').delete().eq('expense_id',id);const {error}=await db.from('expenses').delete().eq('id',id);if(error)throw error;ui.open=null;await loadAll();return toast('Expense deleted')}
+  case 'del-exp':{if(!confirm('Delete this expense? This cannot be undone.'))return;const del=()=>db.from('expenses').delete().eq('id',id).select('id');let r=await del();if(r.error&&r.error.code==='23503'){const sd=await db.from('expense_shares').delete().eq('expense_id',id);if(sd.error)throw sd.error;r=await del()}if(r.error)throw r.error;if(!r.data?.length)throw new Error('Could not delete this expense. Only the person who added it can delete it.');ui.open=null;await loadAll();return toast('Expense deleted')}
   case 'pref':prefs[t.dataset.k]=t.dataset.v;savePrefs();if(t.dataset.k==='theme')applyTheme();return render();
-  case 'name':{const v=await openForm('Display name','This is how other members see you.',[{name:'name',label:'Display name',value:defName()}],'Save');if(!v)return;const nm=v.name.trim();const {data,error}=await db.auth.updateUser({data:{display_name:nm}});if(error)throw error;user=data.user||user;await db.from('split_members').update({display_name:nm}).eq('user_id',user.id);await loadAll();return toast('Name updated')}
-  case 'password':{const v=await openForm('Change password','Choose a new password (min 6 characters).',[{name:'p',label:'New password',type:'password'}],'Update');if(!v)return;const {error}=await db.auth.updateUser({password:v.p});if(error)throw error;return toast('Password updated')}
+  case 'name':{const v=await openForm('Display name','This is how other members see you.',[{name:'name',label:'Display name',value:defName()}],'Save');if(!v)return;const nm=v.name.trim();const {data,error}=await db.auth.updateUser({data:{display_name:nm}});if(error)throw error;user=data.user||user;const mr=await db.from('split_members').update({display_name:nm}).eq('user_id',user.id);if(mr.error)throw mr.error;await loadAll();return toast('Name updated')}
+  case 'password':return newPassword('Change password');
   case 'export':return exportCSV();
-  case 'clearcache':{Object.keys(localStorage).filter(k=>k==='sw_all'||k==='sw_splits'||k.startsWith('sw_c_')).forEach(k=>localStorage.removeItem(k));try{const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch{}return toast('Offline cache cleared')}
+  case 'clearcache':{Object.keys(localStorage).filter(k=>k==='sw_all'||k==='sw_splits'||k.startsWith('sw_c_')).forEach(k=>localStorage.removeItem(k));try{const ks=await caches.keys();await Promise.all(ks.filter(k=>!k.startsWith('splitwise-')).map(k=>caches.delete(k)))}catch{}return toast('Offline cache cleared')}
   case 'install':return install();
  }
 }
@@ -569,15 +629,18 @@ document.addEventListener('change',e=>{
  if(e.target.dataset?.pref==='paise'){prefs.paise=e.target.checked;savePrefs();render()}
 });
 
-if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(e=>console.warn('Service worker not registered',e)));let had=!!navigator.serviceWorker.controller;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had)toast('App updated. Reload for the latest version.');had=true})}
+function a11y(){document.querySelectorAll('div[data-act]').forEach(n=>{if(!n.hasAttribute('tabindex')){n.setAttribute('tabindex','0');n.setAttribute('role','button')}})}
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('div[data-act]')){e.preventDefault();e.target.click()}});
+
 addEventListener('online',()=>flushQ().catch(fail));banner();
 
 /* ---------- boot ---------- */
-if(!configured){$('configWarning').classList.remove('hidden');$('configWarning').textContent='Setup required: add your Supabase project URL and publishable key in index.html.';render();return}
+if(!configured||!db){booted=true;$('configWarning').classList.remove('hidden');$('configWarning').textContent=!configured?'Setup required: add your Supabase project URL and publishable key in index.html.':'Could not load the sign-in library. Check your internet connection and reload the app.';render();return}
 let pendingJoin=new URLSearchParams(location.hash.slice(1)).get('join');
 function maybeJoin(){if(pendingJoin&&user){const c=pendingJoin;pendingJoin=null;history.replaceState(null,'',location.pathname+'#/home');joinFlow(c).catch(fail)}}
-db.auth.onAuthStateChange((_event,session)=>{user=session?.user||null;setTimeout(()=>loadAll().then(flushQ).then(maybeJoin).catch(fail),0)});
-db.auth.getSession().then(({data,error})=>{if(error)throw error;user=data.session?.user||null;return loadAll()}).then(maybeJoin).catch(fail);
+db.auth.onAuthStateChange((_event,session)=>{user=session?.user||null;if(_event==='PASSWORD_RECOVERY')setTimeout(()=>newPassword('Set a new password').catch(fail),600);setTimeout(()=>loadAll().then(flushQ).then(maybeJoin).catch(fail),0)});
+db.auth.getSession().then(({data,error})=>{if(error)throw error;user=data.session?.user||null;return loadAll()}).then(maybeJoin).catch(fail).finally(()=>{booted=true;render()});
 if(pendingJoin)setTimeout(()=>{if(!user)toast('Sign in or create an account to join this group.')},900);
 render();
 })();
