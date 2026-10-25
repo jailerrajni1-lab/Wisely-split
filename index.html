@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#167d5a"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Splitwise"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#16201c" media="(prefers-color-scheme: dark)"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Splitwise"><meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png"><link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <title>Splitwise — Shared Expenses</title>
 <style>
@@ -183,11 +183,13 @@ input,select,textarea{font-size:16px!important}
  .topbar{margin-bottom:16px}.brand{font-size:19px}
  #addTop{display:none}
  .inst-mobile{display:inline-block}
- .mobile-bottom{position:fixed;z-index:6;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line)}
+ .mobile-bottom{position:fixed;z-index:6;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line)}
  .mobile-bottom button{min-height:50px;background:transparent;color:var(--muted);font-size:11px;padding:5px 3px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
  .mobile-bottom button span{font-size:19px;line-height:1}
  .mobile-bottom button.active{color:var(--green);background:var(--green2)}
- .mobile-bottom button.plus span{background:var(--green);color:var(--on-green);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:24px;margin-top:-18px;box-shadow:0 6px 16px #147a5555}
+ .mobile-bottom button.plus{position:absolute;left:50%;top:-30px;transform:translateX(-50%);width:58px;height:58px;min-height:58px;padding:0;border-radius:50%;background:var(--green);color:var(--on-green);display:grid;place-items:center;box-shadow:0 8px 20px #147a5566;border:3px solid var(--bg)}
+ .mobile-bottom button.plus span{font-size:30px;line-height:1;margin:0;background:none;width:auto;height:auto;box-shadow:none}
+ .mobile-bottom button.plus:active{transform:translateX(-50%) scale(.94)}
  #toasts{bottom:90px}
  .modal-backdrop{align-items:flex-end;padding:0}.modal{border-radius:20px 20px 0 0;width:100%;padding-bottom:max(24px,env(safe-area-inset-bottom))}
 }
@@ -419,7 +421,7 @@ function chrome(){
  $('sidebar').innerHTML=on?`<div class="nav">${nav('home','⌂','Home')}${nav('groups','☷','Groups')}${nav('settings','⚙','Settings')}</div><div class="side-head"><h3>Your groups</h3><button class="secondary small" data-act="new-split" aria-label="New group">＋</button></div><div class="split-list">${splits.map(s=>`<div class="split-item ${c.v==='group'&&c.id===s.id?'active':''}" data-act="open-group" data-id="${s.id}"><div class="split-icon">✦</div><div style="min-width:0"><div class="split-name">${esc(s.title)}</div><div class="split-meta">${D[s.id]?.members.length??'—'} people</div></div></div>`).join('')||'<div class="empty" style="padding:12px">No groups yet</div>'}</div><div class="notice">One group per trip, flat or event. Up to 15 people each.</div>`:'';
  const bn=(v,ic,l)=>`<button class="${(c.v===v||(v==='groups'&&c.v==='group'))?'active':''}" data-act="go" data-to="${v}"><span>${ic}</span>${l}</button>`;
  $('bottomNav').classList.toggle('hidden',!on);
- $('bottomNav').innerHTML=on?`${bn('home','⌂','Home')}${bn('groups','☷','Groups')}<button class="plus" data-act="plus" aria-label="Add expense or create group"><span>＋</span>Add</button>${bn('settings','⚙','Settings')}`:'';
+ $('bottomNav').innerHTML=on?`${bn('home','⌂','Home')}${bn('groups','☷','Groups')}${bn('settings','⚙','Settings')}<button class="plus" data-act="plus" aria-label="Add expense or create group"><span aria-hidden="true">＋</span></button>`:'';
 }
 function render(){
  if(!booted){$('view').innerHTML='<div class="panel"><div class="empty"><strong>Loading…</strong></div></div>';return}
