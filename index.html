@@ -72,6 +72,7 @@ input,select,textarea{font-size:16px!important}
 .section-title{font-size:13px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin:24px 2px 12px;font-weight:800}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
 .gcard{padding:17px;cursor:pointer;transition:.15s;display:block;width:100%;text-align:left;font-weight:400}
+.gcard.selected{border-color:var(--green);box-shadow:0 0 0 3px var(--green2);background:var(--soft)}
 .gcard:hover{border-color:var(--green);transform:translateY(-2px)}
 .gcard-top{display:flex;gap:12px;align-items:center;margin-bottom:14px}
 .gcard .split-icon{width:42px;height:42px;font-size:19px;background:var(--green2)}
@@ -247,7 +248,7 @@ const fdate=s=>s?new Date(s).toLocaleDateString('en-IN',{day:'numeric',month:'sh
 
 /* ---------- state ---------- */
 let user=null, splits=[], D={};          // D[splitId] = {s, members, expenses, shares, settlements}
-const ui={q:'',flt:'all',open:null,loading:false};
+const ui={q:'',flt:'all',open:null,loading:false,homeSel:null};
 const isNet=e=>!navigator.onLine||/fetch|network|load failed/i.test(e?.message||'');
 function toast(msg,err){const t=document.createElement('div');t.className='toast'+(err?' err':'');t.textContent=msg;$('toasts').appendChild(t);setTimeout(()=>t.remove(),err?4500:2600)}
 function fail(e){console.error(e);toast(e?.message||String(e),true)}
@@ -317,9 +318,9 @@ const emptyState=(emoji,title,text,btn)=>`<div class="empty"><div class="emoji">
 function activityHTML(list,showGroup){
  return list.length?`<div class="activity-list">${list.map(a=>`<div class="activity-item" data-act="open-group" data-id="${a.gid}"><div class="activity-dot">${a.kind==='expense'?'🧾':'⇄'}</div><div class="activity-copy"><strong>${esc(a.title)}</strong><span>${esc(a.detail)}${showGroup?' · '+esc(a.g):''} · ${fdate(a.at)}</span></div><div class="activity-value">${money(a.amount)}</div></div>`).join('')}</div>`:emptyState('🕒','No activity yet','Expenses and settlements will show up here.');
 }
-function groupCard(id){
+function groupCard(id,act,sel){
  const d=D[id],st=mine(d);
- return `<button class="gcard" data-act="open-group" data-id="${id}"><div class="gcard-top"><div class="split-icon">✦</div><div style="min-width:0"><h4>${esc(d.s.title)}</h4><small>${d.members.length} ${d.members.length===1?'person':'people'} · ${d.expenses.length} expenses</small></div></div><div class="gcard-foot">${statusChip(st)}<span>${money(total(d))} total</span></div></button>`;
+ return `<button class="gcard ${sel?'selected':''}" data-act="${act||'open-group'}" data-id="${id}"><div class="gcard-top"><div class="split-icon">✦</div><div style="min-width:0"><h4>${esc(d.s.title)}</h4><small>${d.members.length} ${d.members.length===1?'person':'people'} · ${d.expenses.length} expenses</small></div></div><div class="gcard-foot">${statusChip(st)}<span>${money(total(d))} total</span></div></button>`;
 }
 
 function landing(){
@@ -327,18 +328,19 @@ function landing(){
 }
 
 function homeView(){
- let owed=0,owe=0;splits.forEach(s=>{const st=mine(D[s.id]);owed+=st.owed;owe+=st.owe});
+ const sel=D[ui.homeSel]?ui.homeSel:null,ids=sel?[sel]:splits.map(s=>s.id);
+ let owed=0,owe=0;ids.forEach(id=>{const st=mine(D[id]);owed+=st.owed;owe+=st.owe});
  const net=owed-owe,hr=new Date().getHours(),greet=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
- const toPay=splits.flatMap(s=>mine(D[s.id]).ds.filter(x=>x.from===user.id).map(x=>({...x,gid:s.id})));
- const act=splits.flatMap(s=>activityOf(D[s.id])).sort((a,b)=>new Date(b.at)-new Date(a.at)).slice(0,8);
- return `<div class="page-head"><div><div class="eyebrow">HOME</div><h1>${greet}, ${esc(defName())}</h1><p>Here's where you stand across all your groups.</p></div><div class="row"><button class="secondary" data-act="join">Join group</button><button class="primary" data-act="add-expense">＋ Add expense</button></div></div>
- <section class="hero"><div class="stats" style="margin-top:0">
-  <div class="stat"><div class="stat-label">Overall balance</div><div class="stat-value ${net>=0?'pos':'neg'}">${net>.005?'+':net<-.005?'−':''}${money(net)}</div><div class="stat-note">Across ${splits.length} ${splits.length===1?'group':'groups'}</div></div>
+ const toPay=ids.flatMap(id=>mine(D[id]).ds.filter(x=>x.from===user.id).map(x=>({...x,gid:id})));
+ const scope=sel?esc(D[sel].s.title):'';
+ const note=sel?'In this group':`Across ${splits.length} ${splits.length===1?'group':'groups'}`;
+ return `<div class="page-head"><div><div class="eyebrow">HOME</div><h1>${greet}, ${esc(defName())}</h1><p>${sel?`Showing balances for <b>${scope}</b>.`:'Showing all your groups. Tap a group to see just its balance.'}</p></div></div>
+ <section class="hero">${sel?`<div class="row" style="justify-content:space-between;margin-bottom:14px"><span class="chip pos">Showing: ${scope}</span><div class="row"><button class="secondary small" data-act="home-select" data-id="">Show all groups</button><button class="secondary small" data-act="open-group" data-id="${sel}">Open group →</button></div></div>`:''}<div class="stats" style="margin-top:0">
+  <div class="stat"><div class="stat-label">Overall balance</div><div class="stat-value ${net>=0?'pos':'neg'}">${net>.005?'+':net<-.005?'−':''}${money(net)}</div><div class="stat-note">${note}</div></div>
   <div class="stat"><div class="stat-label">You are owed</div><div class="stat-value pos">${money(owed)}</div><div class="stat-note">Others owe you</div></div>
   <div class="stat"><div class="stat-label">You owe</div><div class="stat-value ${owe>.005?'neg':''}">${money(owe)}</div><div class="stat-note">Suggested repayments</div></div></div></section>
- ${splits.length?`<div class="section-title" style="margin-top:6px">Your groups</div><div class="grid">${splits.map(s=>groupCard(s.id)).join('')}</div>`:`<section class="panel">${emptyState('👋','Welcome! Start your first group','Create a group for a trip, flat or event — or join one with an invitation code.','<div class="row" style="justify-content:center"><button class="primary" data-act="new-split">＋ Create group</button><button class="secondary" data-act="join">Join with code</button></div>')}</section>`}
- ${splits.length?`<div class="columns" style="margin-top:17px"><section class="panel"><div class="panel-head"><div><h3>Recent activity</h3><div class="panel-sub">Latest across all groups</div></div></div>${activityHTML(act,true)}</section>
- <section class="panel"><div class="panel-head"><div><h3>You need to pay</h3><div class="panel-sub">Open repayments</div></div></div>${toPay.length?`<div class="balance-list">${toPay.map(x=>`<div class="balance-row"><div class="avatar">${esc(nameOf(D[x.gid],x.to).slice(0,1).toUpperCase())}</div><div class="balance-person"><strong>Pay ${esc(nameOf(D[x.gid],x.to))}</strong><span>${esc(D[x.gid].s.title)}</span></div><div class="settle-row"><div class="amount-negative">${money(x.amount)}</div><button class="primary small" data-act="settle" data-id="${x.gid}" data-from="${x.from}" data-to="${x.to}" data-amount="${x.amount}">Settle</button></div></div>`).join('')}</div>`:emptyState('🎉','You\'re all settled','You don\'t owe anyone right now.')}</section></div>`:''}`;
+ ${splits.length?`<div class="section-title" style="margin-top:6px">Your groups</div><div class="grid">${splits.map(s=>groupCard(s.id,'home-select',s.id===sel)).join('')}</div>
+ <section class="panel" style="margin-top:17px"><div class="panel-head"><div><h3>You need to pay</h3><div class="panel-sub">${sel?'Open repayments in this group':'Open repayments across all groups'}</div></div></div>${toPay.length?`<div class="balance-list">${toPay.map(x=>`<div class="balance-row"><div class="avatar">${esc(nameOf(D[x.gid],x.to).slice(0,1).toUpperCase())}</div><div class="balance-person"><strong>Pay ${esc(nameOf(D[x.gid],x.to))}</strong><span>${esc(D[x.gid].s.title)}</span></div><div class="settle-row"><div class="amount-negative">${money(x.amount)}</div><button class="primary small" data-act="settle" data-id="${x.gid}" data-from="${x.from}" data-to="${x.to}" data-amount="${x.amount}">Settle</button></div></div>`).join('')}</div>`:emptyState('🎉','You\'re all settled','You don\'t owe anyone right now.')}</section>`:`<section class="panel">${emptyState('👋','Welcome! Start your first group','Tap the ＋ button to create a group for a trip, flat or event.','<button class="primary" data-act="new-split">＋ Create group</button>')}</section>`}`;
 }
 
 function groupsView(){
@@ -399,13 +401,13 @@ function settingsView(){
 /* ---------- chrome + render ---------- */
 function chrome(){
  const c=cur(),on=!!user;
- $('topActions').innerHTML=on?`<button class="primary" id="addTop" data-act="add-expense">＋ Add expense</button><div class="user-chip" data-act="go" data-to="settings" title="Settings"><span class="avatar">${esc((user.email||'?')[0].toUpperCase())}</span><span id="userStatus">${esc(defName())}</span></div>`:`<button class="secondary" data-act="signup">Create account</button><button class="primary" data-act="signin">Sign in</button>`;
+ $('topActions').innerHTML=on?`<button class="primary" id="addTop" data-act="plus">＋ New</button><div class="user-chip" data-act="go" data-to="settings" title="Settings"><span class="avatar">${esc((user.email||'?')[0].toUpperCase())}</span><span id="userStatus">${esc(defName())}</span></div>`:`<button class="secondary" data-act="signup">Create account</button><button class="primary" data-act="signin">Sign in</button>`;
  const nav=(v,ic,l)=>`<button class="nav-item ${(c.v===v||(v==='groups'&&c.v==='group'))?'active':''}" data-act="go" data-to="${v}"><span>${ic}</span>${l}</button>`;
  $('sidebar').classList.toggle('hidden',!on);
  $('sidebar').innerHTML=on?`<div class="nav">${nav('home','⌂','Home')}${nav('groups','☷','Groups')}${nav('settings','⚙','Settings')}</div><div class="side-head"><h3>Your groups</h3><button class="secondary small" data-act="new-split" aria-label="New group">＋</button></div><div class="split-list">${splits.map(s=>`<div class="split-item ${c.v==='group'&&c.id===s.id?'active':''}" data-act="open-group" data-id="${s.id}"><div class="split-icon">✦</div><div style="min-width:0"><div class="split-name">${esc(s.title)}</div><div class="split-meta">${D[s.id]?.members.length??'—'} people</div></div></div>`).join('')||'<div class="empty" style="padding:12px">No groups yet</div>'}</div><div class="notice">One group per trip, flat or event. Up to 15 people each.</div>`:'';
  const bn=(v,ic,l)=>`<button class="${(c.v===v||(v==='groups'&&c.v==='group'))?'active':''}" data-act="go" data-to="${v}"><span>${ic}</span>${l}</button>`;
  $('bottomNav').classList.toggle('hidden',!on);
- $('bottomNav').innerHTML=on?`${bn('home','⌂','Home')}${bn('groups','☷','Groups')}<button class="plus" data-act="add-expense" aria-label="Add expense"><span>＋</span>Add</button>${bn('settings','⚙','Settings')}`:'';
+ $('bottomNav').innerHTML=on?`${bn('home','⌂','Home')}${bn('groups','☷','Groups')}<button class="plus" data-act="plus" aria-label="Add expense or create group"><span>＋</span>Add</button>${bn('settings','⚙','Settings')}`:'';
 }
 function render(){
  chrome();const c=cur(),el=$('view');
@@ -537,6 +539,8 @@ async function run(a,t,id){
  switch(a){
   case 'go':return go(t.dataset.to);
   case 'open-group':ui.q='';ui.flt='all';ui.open=null;return go('group/'+id);
+  case 'plus':{const v=await openForm('What would you like to do?','',[{name:'c',label:'Choose an action',type:'select',options:[['expense','Add expense'],['group','Create a new group']]}],'Continue');if(!v)return;return v.c==='group'?createSplit():addExpense(null)}
+  case 'home-select':ui.homeSel=(id&&ui.homeSel!==id)?id:null;return render();
   case 'add-expense':return addExpense(id||(c.v==='group'?c.id:null));
   case 'new-split':return createSplit();
   case 'join':return joinFlow();
